@@ -1,0 +1,11 @@
+# .gitignore
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+extracted_text.txt
+extract_pdf.py
+BCI_paper_1 (1).pdf
+zuna.egg-info/
+dist/
+build/
