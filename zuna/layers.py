@@ -77,3 +77,35 @@ class Attention(nn.Module):
         output = torch.matmul(probs, values)
         output = output.transpose(1, 2).contiguous().view(B, S, D)
         return self.wo(output)
+
+class CrossAttention(nn.Module):
+    def __init__(self, dim: int, n_heads: int):
+        super().__init__()
+        self.n_heads = n_heads
+        self.head_dim = dim // n_heads
+        self.wq = nn.Linear(dim, dim, bias=False)
+        self.wk = nn.Linear(dim, dim, bias=False)
+        self.wv = nn.Linear(dim, dim, bias=False)
+        self.wo = nn.Linear(dim, dim, bias=False)
+
+    def forward(self, x, latent, mask=None):
+        B, S, D = x.shape
+        _, SL, _ = latent.shape
+        
+        queries = self.wq(x).view(B, S, self.n_heads, self.head_dim)
+        keys = self.wk(latent).view(B, SL, self.n_heads, self.head_dim)
+        values = self.wv(latent).view(B, SL, self.n_heads, self.head_dim)
+
+        queries = queries.transpose(1, 2)
+        keys = keys.transpose(1, 2)
+        values = values.transpose(1, 2)
+
+        scores = torch.matmul(queries, keys.transpose(-2, -1)) / (self.head_dim ** 0.5)
+        if mask is not None:
+            # Need to handle mask correctly for cross-attention if provided
+            pass
+        
+        probs = F.softmax(scores, dim=-1)
+        output = torch.matmul(probs, values)
+        output = output.transpose(1, 2).contiguous().view(B, S, D)
+        return self.wo(output)
